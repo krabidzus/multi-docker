@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t crabjuice/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true crabjuice/react-test npm test
+
+after_success:
+  - docker build - crabjuice/multi-client ./client
+  - docker build - crabjuice/multi-nginx ./nginx
+  - docker build - crabjuice/multi-server ./server
+  - docker build - crabjuice/multi-worker ./worker
+  
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push crabjuice/multi-client
+  - docker push crabjuice/multi-nginx
+  - docker push crabjuice/multi-server
+  - docker push crabjuice/multi-worker
+
+
